@@ -10,10 +10,12 @@ router.get("/", async (req, res) => {
   }
 })
 
-// TODO: populate thought and friend data
+//populate thought and friend data
 router.get("/:id", async (req, res) => {
   try {
     const payload = await User.findById(req.params.id)
+    .populate({ path: 'thoughts', select: '-__v'})
+    .populate({ path: 'friends', select: '-__v'})
     res.status(200).json({ result: 'success', payload: payload })
   } catch (err) {
     res.status(500).json({ result: 'error', msg: err.message })
@@ -65,6 +67,7 @@ router.post("/:userId/friends/:friendId", async (req, res) => {
           .status(404)
           .json({ message: 'No user found with that id!' });
       }
+      res.status(200).json({ result: 'success', payload: user })
     } catch (err) {
       res.status(500).json({ result: 'error', msg: err.message })
     }
@@ -76,7 +79,7 @@ router.delete("/:userId/friends/:friendId", async (req, res) => {
     try {
       const user = await User.findOneAndUpdate(
         { _id: req.params.userId },
-        { $pull: { friends: { friendId: req.params.friendId } } },
+        { $pull: { friends: req.params.friendId } },
         { runValidators: true, new: true }
       );
 
@@ -85,11 +88,11 @@ router.delete("/:userId/friends/:friendId", async (req, res) => {
           .status(404)
           .json({ message: 'No user found with that id!' });
       }
-      res.json(student);
+      res.json(user);
     } catch (err) {
       res.status(500).json({ result: 'error', msg: err.message })
     }
   }
 );
 
-module.exports = User;
+module.exports = router;
